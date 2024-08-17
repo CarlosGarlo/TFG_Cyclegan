@@ -102,7 +102,7 @@ def train_fn(
         g_scaler.step(opt_gen)
         g_scaler.update()
 
-        if idx % 2 == 0:
+        if idx % 200 == 0:
             save_image(fake_sunny * 0.5 + 0.5, f"saved_images/sunny_{idx}.png")
             save_image(fake_cloudy * 0.5 + 0.5, f"saved_images/cloudy_{idx}.png")
 
@@ -191,7 +191,7 @@ def val_fn(
                     # + identity_cloudy_loss * config.LAMBDA_IDENTITY
                 )
 
-            if idx % 2 == 0:
+            if idx % 200 == 0:
                 save_image(fake_sunny * 0.5 + 0.5, f"saved_images/val_sunny_{idx}.png")
                 save_image(fake_cloudy * 0.5 + 0.5, f"saved_images/val_cloudy_{idx}.png")
 

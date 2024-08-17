@@ -103,7 +103,7 @@ def train_fn(
         g_scaler.step(opt_gen)
         g_scaler.update()
 
-        if idx % 2 == 0:
+        if idx % 200 == 0:
             save_image(fake_sunny, f"saved_images/sunny_{idx}.png")
             save_image(fake_night, f"saved_images/night_{idx}.png")
 
