@@ -31,7 +31,7 @@ def train_fn(
     # Listas vacias para plotear graficas
     cycle_cloudy_loss_list = []
     cycle_night_loss_list = []
-    # D_loss_list = []
+    D_loss_list = []
     # G_loss_list = []
 
     for idx, (cloudy, night) in enumerate(loop):
@@ -58,7 +58,7 @@ def train_fn(
 
             # put it togethor
             D_loss = (D_N_loss + D_C_loss) / 2
-           # D_loss_array = D_loss.cpu().detach().numpy()
+            D_loss_array = D_loss.cpu().detach().numpy()
 
         opt_disc.zero_grad()
         d_scaler.scale(D_loss).backward()
@@ -112,10 +112,10 @@ def train_fn(
         #Vamos rellenando las listas
         cycle_night_loss_list.append(cycle_night_loss_array)
         cycle_cloudy_loss_list.append(cycle_cloudy_loss_array)
-        # D_loss_list.append(D_loss_array)
+        D_loss_list.append(D_loss_array)
         # G_loss_list.append(G_loss_array)
 
-    return cycle_night_loss_list, cycle_cloudy_loss_list #, D_loss_list, G_loss_list
+    return cycle_night_loss_list, cycle_cloudy_loss_list, D_loss_list #, G_loss_list
 
 def val_fn(
     disc_N, disc_C, gen_C, gen_N, val_loader, l1, mse
@@ -131,6 +131,7 @@ def val_fn(
     # Listas vacias para plotear graficas
     cycle_cloudy_loss_list = []
     cycle_night_loss_list = []
+    D_loss_list = []
     with torch.no_grad():
 
         for idx, (cloudy, night) in enumerate(loop):
@@ -157,6 +158,7 @@ def val_fn(
 
                 # put it togethor
                 D_loss = (D_N_loss + D_C_loss) / 2
+                D_loss_array = D_loss.cpu().detach().numpy()
 
 
             # Train Generators S and N
@@ -199,13 +201,14 @@ def val_fn(
            # loop.set_postfix(G_loss = G_loss, cycle_cloudy_loss = cycle_cloudy_loss, cycle_night_loss = cycle_night_loss)
             cycle_night_loss_list.append(cycle_night_loss_array)
             cycle_cloudy_loss_list.append(cycle_cloudy_loss_array)
+            D_loss_list.append(D_loss_array)
 
     disc_N.train(True)
     disc_C.train(True)
     gen_C.train(True)
     gen_N.train(True)
 
-    return cycle_night_loss_list, cycle_cloudy_loss_list
+    return cycle_night_loss_list, cycle_cloudy_loss_list, D_loss_list
 
 def main():
     disc_N = Discriminator(in_channels=3).to(config.DEVICE)
@@ -283,13 +286,15 @@ def main():
     list_cycle_loss_cloudy = []
     list_cycle_loss_night_val = []
     list_cycle_loss_cloudy_val = []
-    # list_D_loss = []
+    list_D_loss = []
+    list_D_loss_val = []
     # list_G_loss = []
     list_cycle_loss_night_mean = []
     list_cycle_loss_cloudy_mean = []
     list_cycle_loss_night_mean_val = []
     list_cycle_loss_cloudy_mean_val = []
-    # list_D_loss_mean = []
+    list_D_loss_mean = []
+    list_D_loss_mean_val = []
     # list_G_loss_mean = []
     list_epoch = []
 
@@ -302,7 +307,7 @@ def main():
     cloudy_file.close()
 
     for epoch in range(config.NUM_EPOCHS):
-        cycle_night, cycle_cloudy = train_fn(
+        cycle_night, cycle_cloudy, D_loss = train_fn(
             disc_N,
             disc_C,
             gen_C,
@@ -318,23 +323,25 @@ def main():
 
         list_cycle_loss_night.append(cycle_night)
         list_cycle_loss_cloudy.append(cycle_cloudy)
-        # list_D_loss.append(D_loss)
+        list_D_loss.append(D_loss)
         # list_G_loss.append(G_loss)
         #Medias de las funciones de perdida para plotear
         list_cycle_loss_night_mean.append(np.mean(list_cycle_loss_night))
         list_cycle_loss_cloudy_mean.append(np.mean(list_cycle_loss_cloudy))
-        # list_D_loss_mean.append(np.mean(list_D_loss))
+        list_D_loss_mean.append(np.mean(list_D_loss))
         # list_G_loss_mean.append(np.mean(list_G_loss))
         #Lista del numero de epochs para plotear
         list_epoch.append(epoch+1)
 
         #Validacion del entrenamiento
-        cycle_night_val, cycle_cloudy_val = val_fn(disc_N, disc_C, gen_C, gen_N, val_loader, L1, mse)
+        cycle_night_val, cycle_cloudy_val, D_loss_val = val_fn(disc_N, disc_C, gen_C, gen_N, val_loader, L1, mse)
         #Listas de validacion
         list_cycle_loss_night_val.append(cycle_night_val)
         list_cycle_loss_cloudy_val.append(cycle_cloudy_val)
+        list_D_loss_val.append(D_loss_val)
         list_cycle_loss_night_mean_val.append(np.mean(list_cycle_loss_night_val))
         list_cycle_loss_cloudy_mean_val.append(np.mean(list_cycle_loss_cloudy_val))
+        list_D_loss_mean_val.append(np.mean(list_D_loss_val))
 
         if list_cycle_loss_night_mean_val[-1] < cycle_loss_night_init:
             if config.SAVE_MODEL:
@@ -369,6 +376,14 @@ def main():
     plt.ylabel("Loss")
     plt.legend()
     plt.savefig(config.MODEL_DIR_NC + "/CycleLossValNC.jpg", bbox_inches = 'tight')
+
+    plt.figure("Discriminator Loss")
+    plt.plot(list_epoch, list_D_loss_mean, color='r', label="D_loss train")
+    plt.plot(list_epoch, list_D_loss_mean_val, color='b', label="D_loss val")
+    plt.xlabel("Epoch")
+    plt.ylabel("D_Loss")
+    plt.legend()
+    plt.savefig(config.MODEL_DIR_NC + "/D_loss_NC.jpg", bbox_inches='tight')
     plt.show()
 
 if __name__ == "__main__":
