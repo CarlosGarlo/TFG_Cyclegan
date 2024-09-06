@@ -360,6 +360,8 @@ def main():
     plt.xlabel("Epoch")
     plt.ylabel("Loss")
     plt.legend()
+    plt.savefig(config.MODEL_DIR_SC + "/CycleLossTrainSC.jpg", bbox_inches = 'tight')
+
 
     plt.figure("Validation")
     plt.plot(list_epoch, list_cycle_loss_sunny_mean_val, color='r', label="Cycle Loss Sunny val")
@@ -367,6 +369,7 @@ def main():
     plt.xlabel("Epoch")
     plt.ylabel("Loss")
     plt.legend()
+    plt.savefig(config.MODEL_DIR_SC + "/CycleLossValSC.jpg", bbox_inches = 'tight')
     plt.show()
 
 if __name__ == "__main__":

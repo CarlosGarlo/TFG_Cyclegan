@@ -6,8 +6,8 @@ import config
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
-TRAIN_DIR = "data/train"
-VAL_DIR = "data/val"
+TRAIN_DIR = "data2/train"
+VAL_DIR = "data2/val"
 TEST_DIR = "data/test"
 
 MODEL_DIR_SN = "model_saved/SunnyNight"
@@ -19,7 +19,7 @@ LEARNING_RATE = 1e-5
 LAMBDA_IDENTITY = 0.0
 LAMBDA_CYCLE = 10
 NUM_WORKERS = 4
-NUM_EPOCHS = 30
+NUM_EPOCHS = 100
 
 LOAD_MODEL = False
 SAVE_MODEL = True

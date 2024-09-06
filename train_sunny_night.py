@@ -108,7 +108,7 @@ def train_fn(
             save_image(fake_night, f"saved_images/night_{idx}.png")
 
         loop.set_postfix(S_real=S_reals / (idx + 1), S_fake=S_fakes / (idx + 1))
-        # loop.set_postfix(G_loss = G_loss, cycle_night_loss = cycle_night_loss, cycle_sunny_loss = cycle_sunny_loss, D_loss = D_loss)
+        loop.set_postfix(D_loss = D_loss)
 
         #Vamos rellenando las listas
         cycle_sunny_loss_list.append(cycle_sunny_loss_array)
@@ -361,6 +361,7 @@ def main():
     plt.xlabel("Epoch")
     plt.ylabel("Loss")
     plt.legend()
+    plt.savefig(config.MODEL_DIR_SN + "/CycleLossTrainSN.jpg", bbox_inches = 'tight')
 
     plt.figure("Validation")
     plt.plot(list_epoch, list_cycle_loss_sunny_mean_val, color='r', label="Cycle Loss Sunny val")
@@ -368,6 +369,7 @@ def main():
     plt.xlabel("Epoch")
     plt.ylabel("Loss")
     plt.legend()
+    plt.savefig(config.MODEL_DIR_SN + "/CycleLossValSN.jpg", bbox_inches = 'tight')
     plt.show()
 
 if __name__ == "__main__":
