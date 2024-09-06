@@ -6,8 +6,8 @@ import config
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
-TRAIN_DIR = "data2/train"
-VAL_DIR = "data2/val"
+TRAIN_DIR = "data/train"
+VAL_DIR = "data/val"
 TEST_DIR = "data/test"
 
 MODEL_DIR_SN = "model_saved/SunnyNight"
