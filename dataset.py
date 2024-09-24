@@ -37,6 +37,37 @@ import numpy as np
 #         return zebra_img, horse_img
 
 
+# class SunnyNightDataset(Dataset):
+#     def __init__(self, root_night, root_sunny, transform=None):
+#         self.root_night = root_night
+#         self.root_sunny = root_sunny
+#         self.transform = transform
+#
+#         self.night_images = os.listdir(root_night)
+#         self.sunny_images = os.listdir(root_sunny)
+#         self.length_dataset = max(len(self.night_images), len(self.sunny_images))  # 1000, 1500
+#         self.night_len = len(self.night_images)
+#         self.sunny_len = len(self.sunny_images)
+#
+#     def __len__(self):
+#         return self.length_dataset
+#
+#     def __getitem__(self, index):
+#         night_img = self.night_images[index % self.night_len] #renombrar y devolverla a train
+#         sunny_img = self.sunny_images[index % self.sunny_len]
+#
+#         night_path = os.path.join(self.root_night, night_img)
+#         sunny_path = os.path.join(self.root_sunny, sunny_img)
+#
+#         night_img = np.array(Image.open(night_path).convert("RGB"))
+#         sunny_img = np.array(Image.open(sunny_path).convert("RGB"))
+#
+#         if self.transform:
+#             augmentations = self.transform(image=night_img, image0=sunny_img)
+#             night_img = augmentations["image"]
+#             sunny_img = augmentations["image0"]
+#
+#         return night_img, sunny_img
 class SunnyNightDataset(Dataset):
     def __init__(self, root_night, root_sunny, transform=None):
         self.root_night = root_night
@@ -53,11 +84,11 @@ class SunnyNightDataset(Dataset):
         return self.length_dataset
 
     def __getitem__(self, index):
-        night_img = self.night_images[index % self.night_len]
-        sunny_img = self.sunny_images[index % self.sunny_len]
+        night_img_name = self.night_images[index % self.night_len] #renombrar y devolverla a train
+        sunny_img_name = self.sunny_images[index % self.sunny_len]
 
-        night_path = os.path.join(self.root_night, night_img)
-        sunny_path = os.path.join(self.root_sunny, sunny_img)
+        night_path = os.path.join(self.root_night, night_img_name)
+        sunny_path = os.path.join(self.root_sunny, sunny_img_name)
 
         night_img = np.array(Image.open(night_path).convert("RGB"))
         sunny_img = np.array(Image.open(sunny_path).convert("RGB"))
@@ -67,8 +98,7 @@ class SunnyNightDataset(Dataset):
             night_img = augmentations["image"]
             sunny_img = augmentations["image0"]
 
-        return night_img, sunny_img
-
+        return night_img, sunny_img, night_img_name, sunny_img_name
 
 class SunnyCloudyDataset(Dataset):
     def __init__(self, root_cloudy, root_sunny, transform=None):
@@ -86,11 +116,11 @@ class SunnyCloudyDataset(Dataset):
         return self.length_dataset
 
     def __getitem__(self, index):
-        cloudy_img = self.cloudy_images[index % self.cloudy_len]
-        sunny_img = self.sunny_images[index % self.sunny_len]
+        cloudy_img_name = self.cloudy_images[index % self.cloudy_len]
+        sunny_img_name = self.sunny_images[index % self.sunny_len]
 
-        cloudy_path = os.path.join(self.root_cloudy, cloudy_img)
-        sunny_path = os.path.join(self.root_sunny, sunny_img)
+        cloudy_path = os.path.join(self.root_cloudy, cloudy_img_name)
+        sunny_path = os.path.join(self.root_sunny, sunny_img_name)
 
         cloudy_img = np.array(Image.open(cloudy_path).convert("RGB"))
         sunny_img = np.array(Image.open(sunny_path).convert("RGB"))
@@ -100,7 +130,7 @@ class SunnyCloudyDataset(Dataset):
             cloudy_img = augmentations["image"]
             sunny_img = augmentations["image0"]
 
-        return cloudy_img, sunny_img
+        return cloudy_img, sunny_img, cloudy_img_name, sunny_img_name
 
 
 class NightCloudyDataset(Dataset):
@@ -119,11 +149,11 @@ class NightCloudyDataset(Dataset):
         return self.length_dataset
 
     def __getitem__(self, index):
-        cloudy_img = self.cloudy_images[index % self.cloudy_len]
-        night_img = self.night_images[index % self.night_len]
+        cloudy_img_name = self.cloudy_images[index % self.cloudy_len]
+        night_img_name = self.night_images[index % self.night_len]
 
-        cloudy_path = os.path.join(self.root_cloudy, cloudy_img)
-        night_path = os.path.join(self.root_night, night_img)
+        cloudy_path = os.path.join(self.root_cloudy, cloudy_img_name)
+        night_path = os.path.join(self.root_night, night_img_name)
 
         cloudy_img = np.array(Image.open(cloudy_path).convert("RGB"))
         night_img = np.array(Image.open(night_path).convert("RGB"))
@@ -133,4 +163,4 @@ class NightCloudyDataset(Dataset):
             cloudy_img = augmentations["image"]
             night_img = augmentations["image0"]
 
-        return cloudy_img, night_img
+        return cloudy_img, night_img, cloudy_img_name, night_img_name
