@@ -7,8 +7,6 @@ Programmed by Aladdin Persson <aladdin.persson at hotmail dot com>
 """
 
 import torch
-
-import dataset
 from dataset import SunnyNightDataset
 import sys
 from utils import save_checkpoint, load_checkpoint
@@ -24,7 +22,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 def train_fn(
-    disc_S, disc_N, gen_N, gen_S, loader, opt_disc, opt_gen, l1, mse, d_scaler, g_scaler
+    disc_S, disc_N, gen_N, gen_S, loader, opt_disc, opt_gen, l1, mse, d_scaler, g_scaler,epoch
 ):
     S_reals = 0
     S_fakes = 0
@@ -35,7 +33,7 @@ def train_fn(
     D_loss_list = []
     # G_loss_list = []
 
-    for idx, (night, sunny) in enumerate(loop):
+    for idx, (night, sunny, night_name, sunny_name) in enumerate(loop):
         night = night.to(config.DEVICE)
         sunny = sunny.to(config.DEVICE)
 
@@ -103,9 +101,20 @@ def train_fn(
         g_scaler.step(opt_gen)
         g_scaler.update()
 
-        if idx % 200 == 0:
-            save_image(fake_sunny, f"saved_images/sunny_{idx}.png")
-            save_image(fake_night, f"saved_images/night_{idx}.png")
+        if epoch % 10 == 0:
+            if idx % 200 == 0:
+                # crear carpeta si no extiste
+                path = "/media/arvc/DATOS/TFG Carlos/Data/saved_images/SunnyNight"
+                # crea la carpeta si no existe
+                import os
+                try:
+                    os.makedirs(path)
+                except OSError:
+                    path = "saved_images/SunnyNight"
+                    print("Carpeta ya existe")
+
+                save_image(fake_sunny * 0.5 + 0.5, path + f"/{epoch}_sunny_{night_name}_n2s.png") #se guarda la imagen de sol generada a partir de noche
+                save_image(fake_night * 0.5 + 0.5, path + f"/{epoch}_night_{sunny_name}_s2n.png")
 
         loop.set_postfix(S_real=S_reals / (idx + 1), S_fake=S_fakes / (idx + 1))
         loop.set_postfix(D_loss = D_loss)
@@ -119,7 +128,7 @@ def train_fn(
     return cycle_sunny_loss_list, cycle_night_loss_list, D_loss_list #, G_loss_list
 
 def val_fn(
-    disc_S, disc_N, gen_N, gen_S, val_loader, l1, mse
+    disc_S, disc_N, gen_N, gen_S, val_loader, l1, mse, epoch
 ):
     disc_S.eval()
     disc_N.eval()
@@ -135,7 +144,7 @@ def val_fn(
     D_loss_list = []
     with torch.no_grad():
 
-        for idx, (night, sunny) in enumerate(loop):
+        for idx, (night, sunny, night_name, sunny_name) in enumerate(loop):
             night = night.to(config.DEVICE)
             sunny = sunny.to(config.DEVICE)
 
@@ -192,10 +201,19 @@ def val_fn(
                     # + identity_sunny_loss * config.LAMBDA_IDENTITY
                     # + identity_night_loss * config.LAMBDA_IDENTITY
                 )
+            if epoch % 10 == 0:
+                if idx % 200 == 0:
+                    path = "/media/arvc/DATOS/TFG Carlos/Data/saved_images/SunnyNight"
+                    # crea la carpeta si no existe
+                    import os
+                    try:
+                        os.makedirs(path)
+                    except OSError:
+                        path = "saved_images/SunnyNight"
+                        print("Carpeta ya existe")
 
-            if idx % 200 == 0:
-                save_image(fake_sunny * 0.5 + 0.5, f"saved_images/val_sunny_{idx}.png")
-                save_image(fake_night * 0.5 + 0.5, f"saved_images/val_night_{idx}.png")
+                    save_image(fake_sunny * 0.5 + 0.5, path + f"/val_{epoch}_sunny_{night_name}_n2s.png")
+                    save_image(fake_night * 0.5 + 0.5, path + f"/val_{epoch}_night_{sunny_name}_{epoch}_s2n.png")
 
             loop.set_postfix(S_real=S_reals / (idx + 1), S_fake=S_fakes / (idx + 1))
            # loop.set_postfix(G_loss = G_loss, cycle_night_loss = cycle_night_loss, cycle_sunny_loss = cycle_sunny_loss)
@@ -319,6 +337,7 @@ def main():
             mse,
             d_scaler,
             g_scaler,
+            epoch
         )
 
         list_cycle_loss_sunny.append(cycle_sunny)
@@ -334,7 +353,7 @@ def main():
         list_epoch.append(epoch+1)
 
         #Validacion del entrenamiento
-        cycle_sunny_val, cycle_night_val, D_loss_val = val_fn(disc_S, disc_N, gen_N, gen_S, val_loader, L1, mse)
+        cycle_sunny_val, cycle_night_val, D_loss_val = val_fn(disc_S, disc_N, gen_N, gen_S, val_loader, L1, mse, epoch)
         #Listas de validacion
         list_cycle_loss_sunny_val.append(cycle_sunny_val)
         list_cycle_loss_night_val.append(cycle_night_val)

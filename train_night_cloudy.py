@@ -23,7 +23,7 @@ import matplotlib.pyplot as plt
 
 
 def train_fn(
-    disc_N, disc_C, gen_C, gen_N, loader, opt_disc, opt_gen, l1, mse, d_scaler, g_scaler
+    disc_N, disc_C, gen_C, gen_N, loader, opt_disc, opt_gen, l1, mse, d_scaler, g_scaler, epoch
 ):
     N_reals = 0
     N_fakes = 0
@@ -34,7 +34,7 @@ def train_fn(
     D_loss_list = []
     # G_loss_list = []
 
-    for idx, (cloudy, night) in enumerate(loop):
+    for idx, (cloudy, night, cloudy_name, night_name) in enumerate(loop):
         cloudy = cloudy.to(config.DEVICE)
         night = night.to(config.DEVICE)
 
@@ -102,9 +102,20 @@ def train_fn(
         g_scaler.step(opt_gen)
         g_scaler.update()
 
-        if idx % 200 == 0:
-            save_image(fake_night * 0.5 + 0.5, f"saved_images/night_{idx}.png")
-            save_image(fake_cloudy * 0.5 + 0.5, f"saved_images/cloudy_{idx}.png")
+        if epoch % 10 == 0:
+            if idx % 200 == 0:
+                # crear carpeta si no extiste
+                path = "/media/arvc/DATOS/TFG Carlos/Data/saved_images/NightCloudy"
+                # crea la carpeta si no existe
+                import os
+                try:
+                    os.makedirs(path)
+                except OSError:
+                    path = "saved_images/NightCloudy"
+                    print("Carpeta ya existe")
+
+                save_image(fake_night * 0.5 + 0.5, path + f"/{epoch}_night_{cloudy_name}_c2n.png")
+                save_image(fake_cloudy * 0.5 + 0.5, path + f"/{epoch}_cloudy_{night_name}_n2c.png")
 
         loop.set_postfix(N_real=N_reals / (idx + 1), N_fake=N_fakes / (idx + 1))
         # loop.set_postfix(G_loss = G_loss, cycle_cloudy_loss = cycle_cloudy_loss, cycle_night_loss = cycle_night_loss, D_loss = D_loss)
@@ -118,7 +129,7 @@ def train_fn(
     return cycle_night_loss_list, cycle_cloudy_loss_list, D_loss_list #, G_loss_list
 
 def val_fn(
-    disc_N, disc_C, gen_C, gen_N, val_loader, l1, mse
+    disc_N, disc_C, gen_C, gen_N, val_loader, l1, mse, epoch
 ):
     disc_N.eval()
     disc_C.eval()
@@ -134,7 +145,7 @@ def val_fn(
     D_loss_list = []
     with torch.no_grad():
 
-        for idx, (cloudy, night) in enumerate(loop):
+        for idx, (cloudy, night, cloudy_name, night_name) in enumerate(loop):
             cloudy = cloudy.to(config.DEVICE)
             night = night.to(config.DEVICE)
 
@@ -192,11 +203,20 @@ def val_fn(
                     # + identity_night_loss * config.LAMBDA_IDENTITY
                     # + identity_cloudy_loss * config.LAMBDA_IDENTITY
                 )
+            if epoch % 10 == 0:
+                if idx % 200 == 0:
+                    # crear carpeta si no extiste
+                    path = "/media/arvc/DATOS/TFG Carlos/Data/saved_images/NightCloudy"
+                    # crea la carpeta si no existe
+                    import os
+                    try:
+                        os.makedirs(path)
+                    except OSError:
+                        path = "saved_images/NightCloudy"
+                        print("Carpeta ya existe")
 
-            if idx % 200 == 0:
-                save_image(fake_night * 0.5 + 0.5, f"saved_images/val_night_{idx}.png")
-                save_image(fake_cloudy * 0.5 + 0.5, f"saved_images/val_cloudy_{idx}.png")
-
+                    save_image(fake_night * 0.5 + 0.5, path + f"/val_{epoch}_night_{cloudy_name}_c2n.png")
+                    save_image(fake_cloudy * 0.5 + 0.5, path + f"/val_{epoch}_cloudy_{night_name}_n2c.png")
             loop.set_postfix(S_real=S_reals / (idx + 1), S_fake=S_fakes / (idx + 1))
            # loop.set_postfix(G_loss = G_loss, cycle_cloudy_loss = cycle_cloudy_loss, cycle_night_loss = cycle_night_loss)
             cycle_night_loss_list.append(cycle_night_loss_array)
@@ -319,6 +339,7 @@ def main():
             mse,
             d_scaler,
             g_scaler,
+            epoch
         )
 
         list_cycle_loss_night.append(cycle_night)
@@ -334,7 +355,7 @@ def main():
         list_epoch.append(epoch+1)
 
         #Validacion del entrenamiento
-        cycle_night_val, cycle_cloudy_val, D_loss_val = val_fn(disc_N, disc_C, gen_C, gen_N, val_loader, L1, mse)
+        cycle_night_val, cycle_cloudy_val, D_loss_val = val_fn(disc_N, disc_C, gen_C, gen_N, val_loader, L1, mse, epoch)
         #Listas de validacion
         list_cycle_loss_night_val.append(cycle_night_val)
         list_cycle_loss_cloudy_val.append(cycle_cloudy_val)

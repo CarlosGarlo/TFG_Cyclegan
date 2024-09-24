@@ -23,7 +23,7 @@ import matplotlib.pyplot as plt
 
 
 def train_fn(
-    disc_S, disc_C, gen_C, gen_S, loader, opt_disc, opt_gen, l1, mse, d_scaler, g_scaler
+    disc_S, disc_C, gen_C, gen_S, loader, opt_disc, opt_gen, l1, mse, d_scaler, g_scaler, epoch
 ):
     S_reals = 0
     S_fakes = 0
@@ -34,7 +34,7 @@ def train_fn(
     D_loss_list = []
     # G_loss_list = []
 
-    for idx, (cloudy, sunny) in enumerate(loop):
+    for idx, (cloudy, sunny, cloudy_name, sunny_name) in enumerate(loop):
         cloudy = cloudy.to(config.DEVICE)
         sunny = sunny.to(config.DEVICE)
 
@@ -102,9 +102,19 @@ def train_fn(
         g_scaler.step(opt_gen)
         g_scaler.update()
 
-        if idx % 200 == 0:
-            save_image(fake_sunny * 0.5 + 0.5, f"saved_images/sunny_{idx}.png")
-            save_image(fake_cloudy * 0.5 + 0.5, f"saved_images/cloudy_{idx}.png")
+        if epoch % 10 == 0:
+            if idx % 200 == 0:
+                path = "/media/arvc/DATOS/TFG Carlos/Data/saved_images/SunnyCloudy"
+                # crea la carpeta si no existe
+                import os
+                try:
+                    os.makedirs(path)
+                except OSError:
+                    path = "saved_images/SunnyCloudy"
+                    print("Carpeta ya existe")
+
+                save_image(fake_sunny * 0.5 + 0.5, path + f"/{epoch}_sunny_{cloudy_name}_c2s.png")
+                save_image(fake_cloudy * 0.5 + 0.5, path + f"/{epoch}_cloudy_{sunny_name}_s2c.png")
 
         loop.set_postfix(S_real=S_reals / (idx + 1), S_fake=S_fakes / (idx + 1))
         # loop.set_postfix(G_loss = G_loss, cycle_cloudy_loss = cycle_cloudy_loss, cycle_sunny_loss = cycle_sunny_loss, D_loss = D_loss)
@@ -118,7 +128,7 @@ def train_fn(
     return cycle_sunny_loss_list, cycle_cloudy_loss_list, D_loss_list #, G_loss_list
 
 def val_fn(
-    disc_S, disc_C, gen_C, gen_S, val_loader, l1, mse
+    disc_S, disc_C, gen_C, gen_S, val_loader, l1, mse, epoch
 ):
     disc_S.eval()
     disc_C.eval()
@@ -134,7 +144,7 @@ def val_fn(
     D_loss_list = []
     with torch.no_grad():
 
-        for idx, (cloudy, sunny) in enumerate(loop):
+        for idx, (cloudy, sunny, cloudy_name, sunny_name) in enumerate(loop):
             cloudy = cloudy.to(config.DEVICE)
             sunny = sunny.to(config.DEVICE)
 
@@ -191,10 +201,19 @@ def val_fn(
                     # + identity_sunny_loss * config.LAMBDA_IDENTITY
                     # + identity_cloudy_loss * config.LAMBDA_IDENTITY
                 )
+            if epoch % 10 == 0:
+                if idx % 200 == 0:
+                    path = "/media/arvc/DATOS/TFG Carlos/Data/saved_images/SunnyCloudy"
+                    # crea la carpeta si no existe
+                    import os
+                    try:
+                        os.makedirs(path)
+                    except OSError:
+                        path = "saved_images/SunnyCloudy"
+                        print("Carpeta ya existe")
 
-            if idx % 200 == 0:
-                save_image(fake_sunny * 0.5 + 0.5, f"saved_images/val_sunny_{idx}.png")
-                save_image(fake_cloudy * 0.5 + 0.5, f"saved_images/val_cloudy_{idx}.png")
+                    save_image(fake_sunny * 0.5 + 0.5, path + f"/val_{epoch}_sunny_{cloudy_name}_c2s.png")
+                    save_image(fake_cloudy * 0.5 + 0.5, path + f"/val_{epoch}_cloudy_{sunny_name}_s2c.png")
 
             loop.set_postfix(S_real=S_reals / (idx + 1), S_fake=S_fakes / (idx + 1))
            # loop.set_postfix(G_loss = G_loss, cycle_cloudy_loss = cycle_cloudy_loss, cycle_sunny_loss = cycle_sunny_loss)
@@ -318,6 +337,7 @@ def main():
             mse,
             d_scaler,
             g_scaler,
+            epoch
         )
 
         list_cycle_loss_sunny.append(cycle_sunny)
@@ -333,7 +353,7 @@ def main():
         list_epoch.append(epoch+1)
 
         #Validacion del entrenamiento
-        cycle_sunny_val, cycle_cloudy_val, D_loss_val = val_fn(disc_S, disc_C, gen_C, gen_S, val_loader, L1, mse)
+        cycle_sunny_val, cycle_cloudy_val, D_loss_val = val_fn(disc_S, disc_C, gen_C, gen_S, val_loader, L1, mse, epoch)
         #Listas de validacion
         list_cycle_loss_sunny_val.append(cycle_sunny_val)
         list_cycle_loss_cloudy_val.append(cycle_cloudy_val)
