@@ -6,11 +6,11 @@ import config
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
-TRAIN_DIR = "data/train"
+TRAIN_DIR = "data/train" %directorios de entrenamiento
 VAL_DIR = "data/val"
 TEST_DIR = "data/test"
 
-MODEL_DIR_SN = "model_saved/SunnyNight"
+MODEL_DIR_SN = "model_saved/SunnyNight" %directorios de donde guardamos los modelos
 MODEL_DIR_SC = "model_saved/SunnyCloudy"
 MODEL_DIR_NC = "model_saved/NightCloudy"
 
@@ -19,7 +19,7 @@ LEARNING_RATE = 1e-5
 LAMBDA_IDENTITY = 0.0
 LAMBDA_CYCLE = 10
 NUM_WORKERS = 4
-NUM_EPOCHS = 200
+NUM_EPOCHS = 200 % configurar numero de epocas
 
 LOAD_MODEL = False
 SAVE_MODEL = True
